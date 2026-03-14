@@ -37,15 +37,15 @@ Peblo Quiz Engine is a backend system that transforms raw educational content (P
 
 ### Key Capabilities
 
-| Capability | Description |
-|---|---|
-| **Content Ingestion** | Upload PDFs or raw text; the system extracts, cleans, and chunks content automatically |
-| **Structured Storage** | PostgreSQL-backed storage for sources, chunks, quiz sessions, questions, and answers |
-| **AI Quiz Generation** | Generates MCQ, True/False, Fill-in-the-blank, and Short Answer questions via Google Gemini |
-| **Source Traceability** | Every generated question links back to its source chunk(s) via `chunk_refs` |
+| Capability                    | Description                                                                                   |
+| ----------------------------- | --------------------------------------------------------------------------------------------- |
+| **Content Ingestion**   | Upload PDFs or raw text; the system extracts, cleans, and chunks content automatically        |
+| **Structured Storage**  | PostgreSQL-backed storage for sources, chunks, quiz sessions, questions, and answers          |
+| **AI Quiz Generation**  | Generates MCQ, True/False, Fill-in-the-blank, and Short Answer questions via Google Gemini    |
+| **Source Traceability** | Every generated question links back to its source chunk(s) via `chunk_refs`                 |
 | **Adaptive Difficulty** | Rule-based engine adjusts difficulty (easy → medium → hard) based on recent answer patterns |
-| **Duplicate Detection** | SHA-256 fingerprinting prevents duplicate questions within a session |
-| **Graceful Fallback** | Runs without an API key using a local mock AI provider for development and testing |
+| **Duplicate Detection** | SHA-256 fingerprinting prevents duplicate questions within a session                          |
+| **Graceful Fallback**   | Runs without an API key using a local mock AI provider for development and testing            |
 
 ---
 
@@ -68,6 +68,10 @@ Peblo Quiz Engine is a backend system that transforms raw educational content (P
                       └───────────────┘     └───────────────┘
 ```
 
+### System Design
+
+![System Design](peblo.png)
+
 ### Data Flow
 
 1. **Ingest** — Client uploads a PDF or submits text via `POST /v1/sources`. The system creates a source record (status: `processing`) and begins async extraction.
@@ -81,16 +85,16 @@ Peblo Quiz Engine is a backend system that transforms raw educational content (P
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| **Framework** | FastAPI with async/await throughout |
-| **Database** | PostgreSQL 16 via SQLAlchemy 2 + asyncpg |
-| **Migrations** | Alembic |
-| **AI** | Google Gemini (structured JSON output mode) |
-| **PDF Parsing** | PyPDF |
-| **HTTP Client** | httpx (async) |
-| **Config** | pydantic-settings with `.env` file support |
-| **Testing** | pytest + pytest-asyncio with in-memory SQLite |
+| Layer                 | Technology                                    |
+| --------------------- | --------------------------------------------- |
+| **Framework**   | FastAPI with async/await throughout           |
+| **Database**    | PostgreSQL 16 via SQLAlchemy 2 + asyncpg      |
+| **Migrations**  | Alembic                                       |
+| **AI**          | Google Gemini (structured JSON output mode)   |
+| **PDF Parsing** | PyPDF                                         |
+| **HTTP Client** | httpx (async)                                 |
+| **Config**      | pydantic-settings with `.env` file support  |
+| **Testing**     | pytest + pytest-asyncio with in-memory SQLite |
 
 ---
 
@@ -176,16 +180,16 @@ curl -X POST http://127.0.0.1:8000/v1/quiz-sessions/{session_id}/answers/{questi
 
 ## Environment Variables
 
-| Variable | Required | Default | Description |
-|---|---|---|---|
-| `DATABASE_URL` | **Yes** | `postgresql+asyncpg://user:password@localhost:5432/peblo_db` | PostgreSQL connection string |
-| `GEMINI_API_KEY` | No | `null` | Google Gemini API key. When unset, the mock AI provider is used |
-| `GEMINI_MODEL` | No | `gemini-3-flash-preview` | Gemini model identifier |
-| `AI_REQUEST_TIMEOUT_SECONDS` | No | `20` | Timeout for each Gemini API call |
-| `AI_MAX_RETRIES` | No | `2` | Retry count for invalid structured output from Gemini |
-| `DEFAULT_QUESTION_COUNT` | No | `5` | Default number of questions per quiz session |
-| `CHUNK_SIZE` | No | `900` | Character limit per text chunk |
-| `CHUNK_OVERLAP` | No | `120` | Overlap between consecutive chunks |
+| Variable                       | Required      | Default                                                        | Description                                                     |
+| ------------------------------ | ------------- | -------------------------------------------------------------- | --------------------------------------------------------------- |
+| `DATABASE_URL`               | **Yes** | `postgresql+asyncpg://user:password@localhost:5432/peblo_db` | PostgreSQL connection string                                    |
+| `GEMINI_API_KEY`             | No            | `null`                                                       | Google Gemini API key. When unset, the mock AI provider is used |
+| `GEMINI_MODEL`               | No            | `gemini-3-flash-preview`                                     | Gemini model identifier                                         |
+| `AI_REQUEST_TIMEOUT_SECONDS` | No            | `20`                                                         | Timeout for each Gemini API call                                |
+| `AI_MAX_RETRIES`             | No            | `2`                                                          | Retry count for invalid structured output from Gemini           |
+| `DEFAULT_QUESTION_COUNT`     | No            | `5`                                                          | Default number of questions per quiz session                    |
+| `CHUNK_SIZE`                 | No            | `900`                                                        | Character limit per text chunk                                  |
+| `CHUNK_OVERLAP`              | No            | `120`                                                        | Overlap between consecutive chunks                              |
 
 > **Note:** The application only depends on `DATABASE_URL`. No Supabase SDK or other third-party database abstraction is used.
 
@@ -222,6 +226,7 @@ Accepts **JSON** or **multipart form data**.
   "text": "Formative assessment uses regular feedback..."
 }
 ```
+
 </details>
 
 <details>
@@ -232,6 +237,7 @@ curl -X POST http://127.0.0.1:8000/v1/sources \
   -F "title=Grade 1 Math" \
   -F "file=@document.pdf;type=application/pdf"
 ```
+
 </details>
 
 **Response** `202 Accepted`
@@ -305,12 +311,12 @@ POST /v1/quiz-sessions
 }
 ```
 
-| Field | Type | Default | Description |
-|---|---|---|---|
-| `source_id` | UUID | *required* | Source to generate questions from |
-| `question_count` | int (1-20) | `5` | Number of questions in this session |
-| `question_types` | string[] | all four types | Cycle through these types in order |
-| `focus_text` | string | `null` | Optional keyword to focus chunk retrieval |
+| Field              | Type       | Default        | Description                               |
+| ------------------ | ---------- | -------------- | ----------------------------------------- |
+| `source_id`      | UUID       | *required*   | Source to generate questions from         |
+| `question_count` | int (1-20) | `5`          | Number of questions in this session       |
+| `question_types` | string[]   | all four types | Cycle through these types in order        |
+| `focus_text`     | string     | `null`       | Optional keyword to focus chunk retrieval |
 
 **Response** `201 Created`
 
@@ -373,12 +379,12 @@ POST /v1/quiz-sessions/{session_id}/answers/{question_id}
 
 Answer format depends on question type:
 
-| Question Type | Answer Payload |
-|---|---|
-| MCQ | `{"answer": {"choice_id": "b"}}` |
-| True/False | `{"answer": {"value": true}}` |
-| Fill in the blank | `{"answer": {"value": "triangle"}}` |
-| Short answer | `{"answer": {"value": "A triangle has three sides..."}}` |
+| Question Type     | Answer Payload                                             |
+| ----------------- | ---------------------------------------------------------- |
+| MCQ               | `{"answer": {"choice_id": "b"}}`                         |
+| True/False        | `{"answer": {"value": true}}`                            |
+| Fill in the blank | `{"answer": {"value": "triangle"}}`                      |
+| Short answer      | `{"answer": {"value": "A triangle has three sides..."}}` |
 
 **Response** `201 Created`
 
@@ -420,12 +426,12 @@ The engine adjusts quiz difficulty using a **sliding-window rule** over the stud
          easy  ◀──  medium  ◀──  hard
 ```
 
-| Scenario | Current | Recent Outcomes | Next |
-|---|---|---|---|
-| Two correct in a row | `medium` | `[true, true]` | `hard` |
-| Two incorrect in a row | `hard` | `[false, false]` | `medium` |
-| Mixed | `medium` | `[true, false]` | `medium` |
-| Already at ceiling | `hard` | `[true, true]` | `hard` |
+| Scenario               | Current    | Recent Outcomes    | Next       |
+| ---------------------- | ---------- | ------------------ | ---------- |
+| Two correct in a row   | `medium` | `[true, true]`   | `hard`   |
+| Two incorrect in a row | `hard`   | `[false, false]` | `medium` |
+| Mixed                  | `medium` | `[true, false]`  | `medium` |
+| Already at ceiling     | `hard`   | `[true, true]`   | `hard`   |
 
 The session response exposes `current_difficulty`, `recent_outcomes`, and `next_difficulty` so clients can display the progression.
 
@@ -495,13 +501,13 @@ All 6 tests cover the full lifecycle: ingestion → chunking → session creatio
 
 The `samples/` directory contains pre-generated outputs from a real run against the three Peblo evaluation PDFs:
 
-| File | Contents |
-|---|---|
-| [`extracted_source.json`](samples/extracted_source.json) | Source detail with chunks and metadata after PDF ingestion |
-| [`generated_quiz_question.json`](samples/generated_quiz_question.json) | Generated questions for MCQ, True/False, and Fill-in-the-blank |
-| [`api_responses.json`](samples/api_responses.json) | Full API response log: health, ingestion, session, adaptive flow |
-| [`database_schema.md`](samples/database_schema.md) | Schema snapshot of all 5 database tables |
-| [`challenge_compliance_report.md`](samples/challenge_compliance_report.md) | Requirement-by-requirement compliance checklist |
+| File                                                                      | Contents                                                         |
+| ------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| [`extracted_source.json`](samples/extracted_source.json)                   | Source detail with chunks and metadata after PDF ingestion       |
+| [`generated_quiz_question.json`](samples/generated_quiz_question.json)     | Generated questions for MCQ, True/False, and Fill-in-the-blank   |
+| [`api_responses.json`](samples/api_responses.json)                         | Full API response log: health, ingestion, session, adaptive flow |
+| [`database_schema.md`](samples/database_schema.md)                         | Schema snapshot of all 5 database tables                         |
+| [`challenge_compliance_report.md`](samples/challenge_compliance_report.md) | Requirement-by-requirement compliance checklist                  |
 
 To regenerate samples with a live server:
 
@@ -514,27 +520,27 @@ pwsh scripts/evaluate_and_refresh_samples.ps1
 
 ## Challenge Compliance
 
-| Requirement | Status | Implementation |
-|---|---|---|
-| Content ingestion from PDF | ✅ | `POST /v1/sources` with multipart PDF |
-| Extract + clean + chunk content | ✅ | PyPDF extraction → text normalization → overlapping chunks |
-| Structured storage | ✅ | PostgreSQL with 5 normalized tables |
-| Quiz generation via LLM | ✅ | Gemini with structured JSON output + mock fallback |
-| MCQ questions | ✅ | Supported via `question_types` parameter |
-| True/False questions | ✅ | Supported via `question_types` parameter |
-| Fill-in-the-blank questions | ✅ | Supported via `question_types` parameter |
-| Quiz retrieval API | ✅ | `GET /v1/quiz-sessions/{id}/next-question` |
-| Student answer submission | ✅ | `POST /v1/quiz-sessions/{id}/answers/{qid}` |
-| Adaptive difficulty | ✅ | Sliding-window rule over last 2 outcomes |
-| Source traceability | ✅ | Every question includes `chunk_refs` |
-| `.env.example` provided | ✅ | All variables documented with defaults |
-| Sample outputs | ✅ | `samples/` directory with 5 artifacts |
+| Requirement                     | Status | Implementation                                               |
+| ------------------------------- | ------ | ------------------------------------------------------------ |
+| Content ingestion from PDF      | ✅     | `POST /v1/sources` with multipart PDF                      |
+| Extract + clean + chunk content | ✅     | PyPDF extraction → text normalization → overlapping chunks |
+| Structured storage              | ✅     | PostgreSQL with 5 normalized tables                          |
+| Quiz generation via LLM         | ✅     | Gemini with structured JSON output + mock fallback           |
+| MCQ questions                   | ✅     | Supported via `question_types` parameter                   |
+| True/False questions            | ✅     | Supported via `question_types` parameter                   |
+| Fill-in-the-blank questions     | ✅     | Supported via `question_types` parameter                   |
+| Quiz retrieval API              | ✅     | `GET /v1/quiz-sessions/{id}/next-question`                 |
+| Student answer submission       | ✅     | `POST /v1/quiz-sessions/{id}/answers/{qid}`                |
+| Adaptive difficulty             | ✅     | Sliding-window rule over last 2 outcomes                     |
+| Source traceability             | ✅     | Every question includes `chunk_refs`                       |
+| `.env.example` provided       | ✅     | All variables documented with defaults                       |
+| Sample outputs                  | ✅     | `samples/` directory with 5 artifacts                      |
 
 ### Optional Features
 
-| Feature | Status |
-|---|---|
-| Duplicate question detection | ✅ SHA-256 fingerprinting per session |
-| Question validation | ✅ Pydantic schema enforcement on AI output |
-| Short answer evaluation | ✅ AI-powered with keyword fallback |
-| Graceful AI fallback | ✅ Mock provider when no API key is set |
+| Feature                      | Status                                      |
+| ---------------------------- | ------------------------------------------- |
+| Duplicate question detection | ✅ SHA-256 fingerprinting per session       |
+| Question validation          | ✅ Pydantic schema enforcement on AI output |
+| Short answer evaluation      | ✅ AI-powered with keyword fallback         |
+| Graceful AI fallback         | ✅ Mock provider when no API key is set     |
