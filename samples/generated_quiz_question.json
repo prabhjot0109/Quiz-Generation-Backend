@@ -1,0 +1,99 @@
+{
+  "source_id": "117f7759-dd48-4472-98b8-b68b3fe0f2b5",
+  "required_types": [
+    "mcq",
+    "true_false",
+    "fill_blank"
+  ],
+  "generated_examples": [
+    {
+      "requested_type": "mcq",
+      "session_id": "c550311f-0cd0-4a24-8236-10c0a936b124",
+      "question": {
+        "id": "c091448e-1fc9-4256-89f7-b42e8a70c2bc",
+        "session_id": "c550311f-0cd0-4a24-8236-10c0a936b124",
+        "source_id": "117f7759-dd48-4472-98b8-b68b3fe0f2b5",
+        "position": 1,
+        "question_type": "mcq",
+        "difficulty": "medium",
+        "prompt": "Which statement best matches this source idea: Peblo Sample Content – Grade 1 Mathematics Topic: Numbers, Counting and Shapes 1.?",
+        "options": [
+          {
+            "id": "d",
+            "text": "The source states the opposite of: Peblo Sample Content – Grade 1 Mathematics Topic: Numbers, Counting and Shapes 1"
+          },
+          {
+            "id": "b",
+            "text": "The source rejects this idea: Peblo Sample Content – Grade 1 Mathematics Topic: Numbers, Counting and Shapes 1"
+          },
+          {
+            "id": "a",
+            "text": "Peblo Sample Content – Grade 1 Mathematics Topic: Numbers, Counting and Shapes 1."
+          },
+          {
+            "id": "c",
+            "text": "The topic is unrelated to: Peblo Sample Content – Grade 1 Mathematics Topic: Numbers, Counting and Shapes 1"
+          }
+        ],
+        "explanation": "Peblo Sample Content – Grade 1 Mathematics Topic: Numbers, Counting and Shapes 1.",
+        "chunk_refs": [
+          "61e45d2a-9fe8-4cc3-a317-592ad0003ca5"
+        ],
+        "answer_submitted": false,
+        "created_at": "2026-03-14T15:05:49.579257Z",
+        "updated_at": "2026-03-14T15:05:49.579257Z"
+      }
+    },
+    {
+      "requested_type": "true_false",
+      "session_id": "e901ef84-4d2d-4c70-a323-fdcd034137a0",
+      "question": {
+        "id": "a7d7fc6a-af62-44c0-a396-ade3341a21e9",
+        "session_id": "e901ef84-4d2d-4c70-a323-fdcd034137a0",
+        "source_id": "117f7759-dd48-4472-98b8-b68b3fe0f2b5",
+        "position": 1,
+        "question_type": "true_false",
+        "difficulty": "medium",
+        "prompt": "True or false: Peblo Sample Content – Grade 1 Mathematics Topic: Numbers, Counting and Shapes 1.",
+        "options": [
+          {
+            "id": "true",
+            "text": "True"
+          },
+          {
+            "id": "false",
+            "text": "False"
+          }
+        ],
+        "explanation": "Peblo Sample Content – Grade 1 Mathematics Topic: Numbers, Counting and Shapes 1.",
+        "chunk_refs": [
+          "61e45d2a-9fe8-4cc3-a317-592ad0003ca5"
+        ],
+        "answer_submitted": false,
+        "created_at": "2026-03-14T15:05:55.564077Z",
+        "updated_at": "2026-03-14T15:05:55.564077Z"
+      }
+    },
+    {
+      "requested_type": "fill_blank",
+      "session_id": "0b7ed9e6-9e12-45ee-9ffd-295340beca06",
+      "question": {
+        "id": "b48eafbf-93ac-4183-8da5-1efe68237bc0",
+        "session_id": "0b7ed9e6-9e12-45ee-9ffd-295340beca06",
+        "source_id": "117f7759-dd48-4472-98b8-b68b3fe0f2b5",
+        "position": 1,
+        "question_type": "fill_blank",
+        "difficulty": "medium",
+        "prompt": "Fill in the blank: Peblo Sample Content – Grade 1 ____ Topic: Numbers, Counting and Shapes 1.",
+        "options": null,
+        "explanation": "Peblo Sample Content – Grade 1 Mathematics Topic: Numbers, Counting and Shapes 1.",
+        "chunk_refs": [
+          "61e45d2a-9fe8-4cc3-a317-592ad0003ca5"
+        ],
+        "answer_submitted": false,
+        "created_at": "2026-03-14T15:06:01.340471Z",
+        "updated_at": "2026-03-14T15:06:01.340471Z"
+      }
+    }
+  ]
+}

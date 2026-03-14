@@ -116,6 +116,7 @@ class MockAIProvider(AIProvider):
 class GeminiAIProvider(AIProvider):
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
+        self.fallback = MockAIProvider()
         self.endpoint = (
             f"https://generativelanguage.googleapis.com/v1beta/models/"
             f"{settings.gemini_model}:generateContent"
@@ -141,15 +142,26 @@ class GeminiAIProvider(AIProvider):
             f"{duplicate_guidance}"
             f"Source chunk:\n{chunk_text}"
         )
-        payload = await self._generate_structured(prompt, schema_model)
-        payload_dict = payload.model_dump()
-        return GeneratedQuestion(
-            question_type=question_type,
-            prompt=payload_dict["prompt"],
-            options=payload_dict.get("options"),
-            correct_answer=payload_dict["correct_answer"],
-            explanation=payload_dict["explanation"],
-        )
+        try:
+            payload = await self._generate_structured(prompt, schema_model)
+            payload_dict = payload.model_dump()
+            return GeneratedQuestion(
+                question_type=question_type,
+                prompt=payload_dict["prompt"],
+                options=payload_dict.get("options"),
+                correct_answer=payload_dict["correct_answer"],
+                explanation=payload_dict["explanation"],
+            )
+        except StructuredOutputError as exc:
+            if "Gemini request failed" in str(exc):
+                return await self.fallback.generate_question(
+                    source_title=source_title,
+                    chunk_text=chunk_text,
+                    question_type=question_type,
+                    difficulty=difficulty,
+                    existing_prompts=existing_prompts,
+                )
+            raise
 
     async def evaluate_short_answer(
         self,
@@ -165,14 +177,23 @@ class GeminiAIProvider(AIProvider):
             f"Source context: {' '.join(source_chunks)}\n"
             f"Student answer: {student_answer}"
         )
-        payload = await self._generate_structured(prompt, ShortAnswerEvaluationSchema)
-        return ShortAnswerEvaluation(
-            score=payload.score, # type: ignore
-            is_correct=payload.is_correct,
-            feedback=payload.feedback,
-            explanation=payload.explanation,
-            evaluation_mode="gemini",
-        )
+        try:
+            payload = await self._generate_structured(prompt, ShortAnswerEvaluationSchema)
+            return ShortAnswerEvaluation(
+                score=payload.score,  # type: ignore
+                is_correct=payload.is_correct,
+                feedback=payload.feedback,
+                explanation=payload.explanation,
+                evaluation_mode="gemini",
+            )
+        except StructuredOutputError as exc:
+            if "Gemini request failed" in str(exc):
+                return await self.fallback.evaluate_short_answer(
+                    question=question,
+                    student_answer=student_answer,
+                    source_chunks=source_chunks,
+                )
+            raise
 
     async def _generate_structured(
         self,
@@ -206,12 +227,20 @@ class GeminiAIProvider(AIProvider):
             },
         }
         async with httpx.AsyncClient(timeout=timeout) as client:
-            response = await client.post(
-                self.endpoint,
-                params={"key": self.settings.gemini_api_key},
-                json=body,
-            )
-            response.raise_for_status()
+            try:
+                response = await client.post(
+                    self.endpoint,
+                    params={"key": self.settings.gemini_api_key},
+                    json=body,
+                )
+                response.raise_for_status()
+            except httpx.HTTPStatusError as exc:
+                status_code = exc.response.status_code if exc.response else "unknown"
+                raise StructuredOutputError(
+                    f"Gemini request failed with HTTP status {status_code}."
+                ) from exc
+            except httpx.HTTPError as exc:
+                raise StructuredOutputError("Gemini request failed due to network error.") from exc
         data = response.json()
         text = "".join(
             part.get("text", "")

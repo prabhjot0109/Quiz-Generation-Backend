@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import re
 from dataclasses import dataclass
 from uuid import UUID
 
@@ -54,17 +55,20 @@ async def process_source_async(
                 raise ValueError("No extractable text was found in the provided source.")
 
             chunks = await asyncio.to_thread(split_into_chunks, extracted_text)
+            document_metadata = _extract_document_metadata(source.title, extracted_text)
             await session.execute(delete(SourceChunk).where(SourceChunk.source_id == source.id))
             for chunk in chunks:
+                chunk_metadata = {
+                    "start_char": chunk.start_char,
+                    "end_char": chunk.end_char,
+                    **document_metadata,
+                }
                 session.add(
                     SourceChunk(
                         source_id=source.id,
                         chunk_index=chunk.chunk_index,
                         content=chunk.content,
-                        metadata_json={
-                            "start_char": chunk.start_char,
-                            "end_char": chunk.end_char,
-                        },
+                        metadata_json=chunk_metadata,
                         search_document=chunk.content,
                     )
                 )
@@ -86,10 +90,44 @@ async def get_source_or_404(session: AsyncSession, source_id: UUID) -> Source:
     return source
 
 
-async def fetch_source_detail(session: AsyncSession, source_id: UUID) -> tuple[Source, int]:
+async def fetch_source_detail(
+    session: AsyncSession, source_id: UUID
+) -> tuple[Source, int, list[SourceChunk]]:
     source = await get_source_or_404(session, source_id)
     count_result = await session.execute(
         select(func.count(SourceChunk.id)).where(SourceChunk.source_id == source.id)
     )
     chunk_count = int(count_result.scalar_one())
-    return source, chunk_count
+    chunks_result = await session.execute(
+        select(SourceChunk)
+        .where(SourceChunk.source_id == source.id)
+        .order_by(SourceChunk.chunk_index.asc())
+    )
+    chunks = list(chunks_result.scalars().all())
+    return source, chunk_count, chunks
+
+
+def _extract_document_metadata(title: str, extracted_text: str) -> dict[str, object]:
+    combined = f"{title} {extracted_text[:500]}".lower()
+
+    grade_match = re.search(r"grade\s*(\d+)", combined)
+    grade = int(grade_match.group(1)) if grade_match else None
+
+    subject = None
+    if "math" in combined or "mathematics" in combined:
+        subject = "Math"
+    elif "science" in combined:
+        subject = "Science"
+    elif "grammar" in combined or "english" in combined or "vocabulary" in combined:
+        subject = "English"
+
+    topic = None
+    topic_match = re.search(r"topic:\s*([^\n\r.]+)", extracted_text, flags=re.IGNORECASE)
+    if topic_match:
+        topic = topic_match.group(1).strip()
+
+    return {
+        "grade": grade,
+        "subject": subject,
+        "topic": topic,
+    }

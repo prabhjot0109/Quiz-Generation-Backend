@@ -58,6 +58,9 @@ async def retrieve_chunks(
             return found
 
     ordered = sorted(source.chunks, key=lambda chunk: chunk.chunk_index)
+    if len(ordered) <= limit:
+        return ordered
+
     start = offset_seed % len(ordered)
     selected = ordered[start : start + limit]
     if len(selected) < limit:

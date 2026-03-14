@@ -1,0 +1,34 @@
+{
+  "source": {
+    "id": "117f7759-dd48-4472-98b8-b68b3fe0f2b5",
+    "title": "peblo_pdf_grade1_math_numbers.pdf",
+    "input_type": "pdf",
+    "status": "ready",
+    "original_filename": "peblo_pdf_grade1_math_numbers.pdf",
+    "summary": "Peblo Sample Content – Grade 1 Mathematics Topic: Numbers, Counting and Shapes 1. (MCQ) How many sides does a triangle have? A. 2 B. 3 C. 4 D. 5 Answer: 3 2. (MCQ) Which number comes after 19? A. 18 B. 20 C. 21 D. 17 Answer: 20 3. (Fill) Fill in the blank: 7 + 2 = ____. Answer: 9 4. (True/False) A square has four equal sides. Answer: True 5. (MCQ) Which shape is round? A. Square B. Triangle C. Cir",
+    "error_message": null,
+    "created_at": "2026-03-14T15:04:52.128562Z",
+    "updated_at": "2026-03-14T15:04:56.411741Z",
+    "chunk_count": 1,
+    "chunks": [
+      {
+        "id": "61e45d2a-9fe8-4cc3-a317-592ad0003ca5",
+        "chunk_index": 0,
+        "content": "Peblo Sample Content – Grade 1 Mathematics Topic: Numbers, Counting and Shapes 1. (MCQ) How many sides does a triangle have? A. 2 B. 3 C. 4 D. 5 Answer: 3 2. (MCQ) Which number comes after 19? A. 18 B. 20 C. 21 D. 17 Answer: 20 3. (Fill) Fill in the blank: 7 + 2 = ____. Answer: 9 4. (True/False) A square has four equal sides. Answer: True 5. (MCQ) Which shape is round? A. Square B. Triangle C. Circle D. Rectangle Answer: Circle 6. (Fill) Fill in the blank: 10 - 4 = ____. Answer: 6 7. (True/False) The number 15 is greater than 12. Answer: True 8. (MCQ) Which number is the smallest? A. 9 B. 4 C. 7 D. 6 Answer: 4 9. (Fill) Fill in the blank: 5 + 5 = ____. Answer: 10 10. (MCQ) How many corners does a rectangle have? A. 2 B. 3 C. 4 D. 5 Answer: 4",
+        "metadata": {
+          "start_char": 0,
+          "end_char": 751,
+          "grade": 1,
+          "subject": "Math",
+          "topic": "Numbers, Counting and Shapes 1"
+        }
+      }
+    ]
+  },
+  "extraction_notes": {
+    "input_file": "peblo_pdf_grade1_math_numbers.pdf",
+    "status": "ready",
+    "chunk_count": 1,
+    "summary_preview": "Peblo Sample Content – Grade 1 Mathematics Topic: Numbers, Counting and Shapes 1. (MCQ) How many sides does a triangle have? A. 2 B. 3 C. 4 D. 5 Answer: 3 2. (MCQ) Which number comes after 19? A. 18 B. 20 C. 21 D. 17 Answer: 20 3. (Fill) Fill in the blank: 7 + 2 = ____. Answer: 9 4. (True/False) A square has four equal sides. Answer: True 5. (MCQ) Which shape is round? A. Square B. Triangle C. Cir"
+  }
+}

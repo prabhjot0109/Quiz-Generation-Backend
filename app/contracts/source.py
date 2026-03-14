@@ -22,5 +22,13 @@ class SourceResponse(BaseModel):
     updated_at: datetime
 
 
+class SourceChunkResponse(BaseModel):
+    id: UUID
+    chunk_index: int
+    content: str
+    metadata: dict[str, object]
+
+
 class SourceDetailResponse(SourceResponse):
     chunk_count: int
+    chunks: list[SourceChunkResponse]

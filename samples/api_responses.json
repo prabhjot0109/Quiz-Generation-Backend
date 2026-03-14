@@ -1,0 +1,263 @@
+{
+  "health": {
+    "request": "GET /health",
+    "response": {
+      "status": "ok"
+    }
+  },
+  "ingestion": {
+    "request": "POST /v1/sources (multipart PDF) + GET /v1/sources/{source_id}",
+    "sources": [
+      {
+        "file": "peblo_pdf_grade1_math_numbers.pdf",
+        "create_response": {
+          "id": "117f7759-dd48-4472-98b8-b68b3fe0f2b5",
+          "title": "peblo_pdf_grade1_math_numbers.pdf",
+          "input_type": "pdf",
+          "status": "processing",
+          "original_filename": "peblo_pdf_grade1_math_numbers.pdf",
+          "summary": null,
+          "error_message": null,
+          "created_at": "2026-03-14T15:04:52.128562Z",
+          "updated_at": "2026-03-14T15:04:52.128562Z"
+        },
+        "source_detail": {
+          "id": "117f7759-dd48-4472-98b8-b68b3fe0f2b5",
+          "title": "peblo_pdf_grade1_math_numbers.pdf",
+          "input_type": "pdf",
+          "status": "ready",
+          "original_filename": "peblo_pdf_grade1_math_numbers.pdf",
+          "summary": "Peblo Sample Content – Grade 1 Mathematics Topic: Numbers, Counting and Shapes 1. (MCQ) How many sides does a triangle have? A. 2 B. 3 C. 4 D. 5 Answer: 3 2. (MCQ) Which number comes after 19? A. 18 B. 20 C. 21 D. 17 Answer: 20 3. (Fill) Fill in the blank: 7 + 2 = ____. Answer: 9 4. (True/False) A square has four equal sides. Answer: True 5. (MCQ) Which shape is round? A. Square B. Triangle C. Cir",
+          "error_message": null,
+          "created_at": "2026-03-14T15:04:52.128562Z",
+          "updated_at": "2026-03-14T15:04:56.411741Z",
+          "chunk_count": 1,
+          "chunks": [
+            {
+              "id": "61e45d2a-9fe8-4cc3-a317-592ad0003ca5",
+              "chunk_index": 0,
+              "content": "Peblo Sample Content – Grade 1 Mathematics Topic: Numbers, Counting and Shapes 1. (MCQ) How many sides does a triangle have? A. 2 B. 3 C. 4 D. 5 Answer: 3 2. (MCQ) Which number comes after 19? A. 18 B. 20 C. 21 D. 17 Answer: 20 3. (Fill) Fill in the blank: 7 + 2 = ____. Answer: 9 4. (True/False) A square has four equal sides. Answer: True 5. (MCQ) Which shape is round? A. Square B. Triangle C. Circle D. Rectangle Answer: Circle 6. (Fill) Fill in the blank: 10 - 4 = ____. Answer: 6 7. (True/False) The number 15 is greater than 12. Answer: True 8. (MCQ) Which number is the smallest? A. 9 B. 4 C. 7 D. 6 Answer: 4 9. (Fill) Fill in the blank: 5 + 5 = ____. Answer: 10 10. (MCQ) How many corners does a rectangle have? A. 2 B. 3 C. 4 D. 5 Answer: 4",
+              "metadata": {
+                "start_char": 0,
+                "end_char": 751,
+                "grade": 1,
+                "subject": "Math",
+                "topic": "Numbers, Counting and Shapes 1"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "file": "peblo_pdf_grade3_science_plants_animals.pdf",
+        "create_response": {
+          "id": "6a56d27c-44b1-4ae0-8b79-f96f6fc4ee16",
+          "title": "peblo_pdf_grade3_science_plants_animals.pdf",
+          "input_type": "pdf",
+          "status": "processing",
+          "original_filename": "peblo_pdf_grade3_science_plants_animals.pdf",
+          "summary": null,
+          "error_message": null,
+          "created_at": "2026-03-14T15:05:01.42521Z",
+          "updated_at": "2026-03-14T15:05:01.42521Z"
+        },
+        "source_detail": {
+          "id": "6a56d27c-44b1-4ae0-8b79-f96f6fc4ee16",
+          "title": "peblo_pdf_grade3_science_plants_animals.pdf",
+          "input_type": "pdf",
+          "status": "ready",
+          "original_filename": "peblo_pdf_grade3_science_plants_animals.pdf",
+          "summary": "Peblo Sample Content – Grade 3 Science Topic: Plants and Animals 1. (MCQ) Which part of a plant makes food? A. Root B. Leaf C. Stem D. Flower Answer: Leaf 2. (True/False) Plants need sunlight to grow. Answer: True 3. (Fill) Fill in the blank: Animals that eat only plants are called ____. Answer: Herbivores 4. (MCQ) Which animal is a carnivore? A. Cow B. Lion C. Goat D. Deer Answer: Lion 5. (Fill) ",
+          "error_message": null,
+          "created_at": "2026-03-14T15:05:01.42521Z",
+          "updated_at": "2026-03-14T15:05:03.637003Z",
+          "chunk_count": 1,
+          "chunks": [
+            {
+              "id": "d00ba9fc-6ff1-469b-a774-e0dd040f975c",
+              "chunk_index": 0,
+              "content": "Peblo Sample Content – Grade 3 Science Topic: Plants and Animals 1. (MCQ) Which part of a plant makes food? A. Root B. Leaf C. Stem D. Flower Answer: Leaf 2. (True/False) Plants need sunlight to grow. Answer: True 3. (Fill) Fill in the blank: Animals that eat only plants are called ____. Answer: Herbivores 4. (MCQ) Which animal is a carnivore? A. Cow B. Lion C. Goat D. Deer Answer: Lion 5. (Fill) Fill in the blank: The part of the plant that absorbs water from soil is the ____. Answer: Root 6. (True/False) Birds are animals that can lay eggs. Answer: True 7. (MCQ) Which of these is not a plant part? A. Leaf B. Root C. Stem D. Wing Answer: Wing 8. (Fill) Fill in the blank: Plants release ____ gas during photosynthesis. Answer: Oxygen 9. (True/False) All animals can make their own food. Answer: False 10. (MCQ) Which animal lives in water? A. Tiger B. Fish C. Elephant D. Dog Answer: Fish",
+              "metadata": {
+                "start_char": 0,
+                "end_char": 897,
+                "grade": 3,
+                "subject": "Science",
+                "topic": "Plants and Animals 1"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "file": "peblo_pdf_grade4_english_grammar.pdf",
+        "create_response": {
+          "id": "c24a2c3d-d4e4-4776-8830-01de1c47ff6e",
+          "title": "peblo_pdf_grade4_english_grammar.pdf",
+          "input_type": "pdf",
+          "status": "processing",
+          "original_filename": "peblo_pdf_grade4_english_grammar.pdf",
+          "summary": null,
+          "error_message": null,
+          "created_at": "2026-03-14T15:05:07.091001Z",
+          "updated_at": "2026-03-14T15:05:07.091001Z"
+        },
+        "source_detail": {
+          "id": "c24a2c3d-d4e4-4776-8830-01de1c47ff6e",
+          "title": "peblo_pdf_grade4_english_grammar.pdf",
+          "input_type": "pdf",
+          "status": "ready",
+          "original_filename": "peblo_pdf_grade4_english_grammar.pdf",
+          "summary": "Peblo Sample Content – Grade 4 English Topic: Grammar and Vocabulary 1. (MCQ) Choose the correct plural of 'child'. A. Childs B. Children C. Childes D. Child Answer: Children 2. (True/False) A noun is the name of a person, place, animal, or thing. Answer: True 3. (Fill) Fill in the blank: She ____ to school every day. Answer: goes 4. (MCQ) Which word is an adjective? A. Quick B. Run C. Jump D. Pla",
+          "error_message": null,
+          "created_at": "2026-03-14T15:05:07.091001Z",
+          "updated_at": "2026-03-14T15:05:09.082971Z",
+          "chunk_count": 2,
+          "chunks": [
+            {
+              "id": "20088420-ed61-409d-80a0-356d117c075a",
+              "chunk_index": 0,
+              "content": "Peblo Sample Content – Grade 4 English Topic: Grammar and Vocabulary 1. (MCQ) Choose the correct plural of 'child'. A. Childs B. Children C. Childes D. Child Answer: Children 2. (True/False) A noun is the name of a person, place, animal, or thing. Answer: True 3. (Fill) Fill in the blank: She ____ to school every day. Answer: goes 4. (MCQ) Which word is an adjective? A. Quick B. Run C. Jump D. Play Answer: Quick 5. (Fill) Fill in the blank: The opposite of 'hot' is ____. Answer: cold 6. (True/False) Verbs describe actions. Answer: True 7. (MCQ) Which sentence is correct? A. She go to school B. She goes to school C. She going school D. She gone school Answer: She goes to school 8. (Fill) Fill in the blank: Birds can ____ in the sky. Answer: fly 9. (MCQ) Which word is a synonym of 'happy'? A. Sad B. Joyful C. Angry D. Tired Answer: Joyful 10. (True/False) An adjective describes a noun.",
+              "metadata": {
+                "start_char": 0,
+                "end_char": 896,
+                "grade": 4,
+                "subject": "English",
+                "topic": "Grammar and Vocabulary 1"
+              }
+            },
+            {
+              "id": "2da08b9c-9f3a-4070-bb27-2b89609647a8",
+              "chunk_index": 1,
+              "content": "a synonym of 'happy'? A. Sad B. Joyful C. Angry D. Tired Answer: Joyful 10. (True/False) An adjective describes a noun. Answer: True",
+              "metadata": {
+                "start_char": 776,
+                "end_char": 909,
+                "grade": 4,
+                "subject": "English",
+                "topic": "Grammar and Vocabulary 1"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "adaptive_session_create": {
+    "request": "POST /v1/quiz-sessions",
+    "payload": {
+      "source_id": "117f7759-dd48-4472-98b8-b68b3fe0f2b5",
+      "question_count": 4,
+      "question_types": [
+        "mcq",
+        "true_false",
+        "mcq",
+        "true_false"
+      ]
+    },
+    "response": {
+      "id": "b14e05de-462c-4b16-8ac3-7ad8df8193c6",
+      "source_id": "117f7759-dd48-4472-98b8-b68b3fe0f2b5",
+      "status": "active",
+      "current_difficulty": "medium",
+      "target_question_count": 4,
+      "answered_count": 0,
+      "generated_count": 0,
+      "correct_count": 0,
+      "incorrect_count": 0,
+      "last_score": null,
+      "question_types": [
+        "mcq",
+        "true_false",
+        "mcq",
+        "true_false"
+      ],
+      "recent_outcomes": [],
+      "focus_text": null,
+      "created_at": "2026-03-14T15:05:12.265895Z",
+      "updated_at": "2026-03-14T15:05:12.265895Z"
+    }
+  },
+  "adaptive_flow": [
+    {
+      "step": 1,
+      "question_id": "de06d19e-50fa-4d87-b069-67c578b7cf22",
+      "question_type": "mcq",
+      "difficulty_before": "medium",
+      "submitted_answer": {
+        "choice_id": "a"
+      },
+      "is_correct": true,
+      "score": 1.0,
+      "evaluation_mode": "deterministic",
+      "next_difficulty": "medium"
+    },
+    {
+      "step": 2,
+      "question_id": "0885e154-eaae-45e9-9453-6b725aa8efdd",
+      "question_type": "true_false",
+      "difficulty_before": "medium",
+      "submitted_answer": {
+        "value": true
+      },
+      "is_correct": true,
+      "score": 1.0,
+      "evaluation_mode": "deterministic",
+      "next_difficulty": "hard"
+    },
+    {
+      "step": 3,
+      "question_id": "72499b59-909d-481c-909d-d56364fd6aa2",
+      "question_type": "mcq",
+      "difficulty_before": "hard",
+      "submitted_answer": {
+        "choice_id": "b"
+      },
+      "is_correct": false,
+      "score": 0.0,
+      "evaluation_mode": "deterministic",
+      "next_difficulty": "hard"
+    },
+    {
+      "step": 4,
+      "question_id": "185d68d0-8740-44d0-bff0-8ec6720039e8",
+      "question_type": "true_false",
+      "difficulty_before": "hard",
+      "submitted_answer": {
+        "value": false
+      },
+      "is_correct": false,
+      "score": 0.0,
+      "evaluation_mode": "deterministic",
+      "next_difficulty": "medium"
+    }
+  ],
+  "adaptive_session_final": {
+    "request": "GET /v1/quiz-sessions/b14e05de-462c-4b16-8ac3-7ad8df8193c6",
+    "response": {
+      "id": "b14e05de-462c-4b16-8ac3-7ad8df8193c6",
+      "source_id": "117f7759-dd48-4472-98b8-b68b3fe0f2b5",
+      "status": "completed",
+      "current_difficulty": "medium",
+      "target_question_count": 4,
+      "answered_count": 4,
+      "generated_count": 4,
+      "correct_count": 2,
+      "incorrect_count": 2,
+      "last_score": 0.0,
+      "question_types": [
+        "mcq",
+        "true_false",
+        "mcq",
+        "true_false"
+      ],
+      "recent_outcomes": [
+        true,
+        false,
+        false
+      ],
+      "focus_text": null,
+      "created_at": "2026-03-14T15:05:12.265895Z",
+      "updated_at": "2026-03-14T15:05:42.244566Z"
+    }
+  }
+}

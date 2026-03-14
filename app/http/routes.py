@@ -3,6 +3,7 @@ from __future__ import annotations
 from uuid import UUID
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, UploadFile, status
+from starlette.datastructures import UploadFile as StarletteUploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.contracts.quiz import (
@@ -13,7 +14,7 @@ from app.contracts.quiz import (
     QuizSessionCreateRequest,
     QuizSessionResponse,
 )
-from app.contracts.source import SourceDetailResponse, SourceResponse
+from app.contracts.source import SourceChunkResponse, SourceDetailResponse, SourceResponse
 from app.db.models import SourceInputType
 from app.http.dependencies import get_ai_provider, get_db_session
 from app.logic.ai import AIProvider, StructuredOutputError
@@ -39,7 +40,38 @@ async def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
-@router.post("/v1/sources", response_model=SourceResponse, status_code=status.HTTP_202_ACCEPTED)
+@router.post(
+    "/v1/sources",
+    response_model=SourceResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+    openapi_extra={
+        "requestBody": {
+            "required": True,
+            "content": {
+                "application/json": {
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "title": {"type": "string"},
+                            "text": {"type": "string"},
+                        },
+                        "required": ["text"],
+                    }
+                },
+                "multipart/form-data": {
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "title": {"type": "string"},
+                            "text": {"type": "string"},
+                            "file": {"type": "string", "format": "binary"},
+                        },
+                    }
+                },
+            },
+        }
+    },
+)
 async def create_source_endpoint(
     request: Request,
     background_tasks: BackgroundTasks,
@@ -62,16 +94,27 @@ async def get_source_endpoint(
     session: AsyncSession = Depends(get_db_session),
 ) -> SourceDetailResponse:
     try:
-        source, chunk_count = await fetch_source_detail(session, source_id)
+        source, chunk_count, chunks = await fetch_source_detail(session, source_id)
     except LookupError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
     return SourceDetailResponse(
         **SourceResponse.model_validate(source).model_dump(),
         chunk_count=chunk_count,
+        chunks=[
+            SourceChunkResponse(
+                id=chunk.id,
+                chunk_index=chunk.chunk_index,
+                content=chunk.content,
+                metadata=chunk.metadata_json,
+            )
+            for chunk in chunks
+        ],
     )
 
 
-@router.post("/v1/quiz-sessions", response_model=QuizSessionResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/v1/quiz-sessions", response_model=QuizSessionResponse, status_code=status.HTTP_201_CREATED
+)
 async def create_quiz_session_endpoint(
     payload: QuizSessionCreateRequest,
     session: AsyncSession = Depends(get_db_session),
@@ -180,7 +223,7 @@ async def _parse_source_payload(request: Request) -> SourcePayload:
             input_type=SourceInputType.text,
             raw_text=text,
         )
-    if isinstance(upload, UploadFile):
+    if isinstance(upload, (UploadFile, StarletteUploadFile)):
         if not (
             (upload.filename or "").lower().endswith(".pdf")
             or upload.content_type == "application/pdf"
