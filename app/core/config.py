@@ -15,7 +15,7 @@ class Settings(BaseSettings):
         alias="DATABASE_URL",
     )
     gemini_api_key: str | None = Field(default=None, alias="GEMINI_API_KEY")
-    gemini_model: str = Field(default="gemini-3.0-flash", alias="GEMINI_MODEL")
+    gemini_model: str = Field(default="gemini-3-flash-preview", alias="GEMINI_MODEL")
     ai_request_timeout_seconds: float = Field(default=20.0, alias="AI_REQUEST_TIMEOUT_SECONDS")
     default_question_count: int = Field(default=5, alias="DEFAULT_QUESTION_COUNT")
     chunk_size: int = Field(default=900, alias="CHUNK_SIZE")

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy.dialects import postgresql
 
 
 revision = "20260314_0001"
@@ -13,13 +14,21 @@ depends_on = None
 
 
 def upgrade() -> None:
-    source_input_type = sa.Enum("text", "pdf", name="sourceinputtype")
-    source_status = sa.Enum("pending", "processing", "ready", "failed", name="sourcestatus")
-    difficulty_level = sa.Enum("easy", "medium", "hard", name="difficultylevel")
-    question_type = sa.Enum(
-        "mcq", "true_false", "fill_blank", "short_answer", name="questiontype"
+    source_input_type = postgresql.ENUM(
+        "text", "pdf", name="sourceinputtype", create_type=False
     )
-    session_status = sa.Enum("active", "completed", name="sessionstatus")
+    source_status = postgresql.ENUM(
+        "pending", "processing", "ready", "failed", name="sourcestatus", create_type=False
+    )
+    difficulty_level = postgresql.ENUM(
+        "easy", "medium", "hard", name="difficultylevel", create_type=False
+    )
+    question_type = postgresql.ENUM(
+        "mcq", "true_false", "fill_blank", "short_answer", name="questiontype", create_type=False
+    )
+    session_status = postgresql.ENUM(
+        "active", "completed", name="sessionstatus", create_type=False
+    )
 
     bind = op.get_bind()
     if bind.dialect.name == "postgresql":
