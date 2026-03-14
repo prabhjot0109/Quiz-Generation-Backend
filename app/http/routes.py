@@ -212,17 +212,15 @@ async def _parse_source_payload(request: Request) -> SourcePayload:
         return SourcePayload(title=title, input_type=SourceInputType.text, raw_text=text)
 
     form = await request.form()
-    text = str(form.get("text") or "").strip()
+    # Filter out Swagger UI placeholder values (it sends literal "string" for every field).
+    raw_text = str(form.get("text") or "").strip()
+    text = "" if raw_text == "string" else raw_text
     upload = form.get("file")
-    title = str(form.get("title") or "").strip()
-    if text and upload:
-        raise HTTPException(status_code=422, detail="Provide either text or a PDF file, not both.")
-    if text:
-        return SourcePayload(
-            title=title or "Untitled text source",
-            input_type=SourceInputType.text,
-            raw_text=text,
-        )
+    raw_title = str(form.get("title") or "").strip()
+    title = "" if raw_title == "string" else raw_title
+
+    # File takes priority — if a PDF is uploaded, use it regardless of whether
+    # the text field also has a value (Swagger UI always populates all fields).
     if isinstance(upload, (UploadFile, StarletteUploadFile)):
         if not (
             (upload.filename or "").lower().endswith(".pdf")
@@ -235,5 +233,11 @@ async def _parse_source_payload(request: Request) -> SourcePayload:
             input_type=SourceInputType.pdf,
             pdf_bytes=file_bytes,
             original_filename=upload.filename,
+        )
+    if text:
+        return SourcePayload(
+            title=title or "Untitled text source",
+            input_type=SourceInputType.text,
+            raw_text=text,
         )
     raise HTTPException(status_code=422, detail="Provide text or a PDF file.")
