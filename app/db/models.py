@@ -132,6 +132,13 @@ class QuizSession(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
 class Question(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "questions"
+    __table_args__ = (
+        Index(
+            "ix_questions_session_id_question_fingerprint",
+            "session_id",
+            "question_fingerprint",
+        ),
+    )
 
     session_id: Mapped[Any] = mapped_column(
         ForeignKey("quiz_sessions.id", ondelete="CASCADE"), nullable=False
@@ -145,6 +152,7 @@ class Question(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     correct_answer: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
     explanation: Mapped[str | None] = mapped_column(Text)
     chunk_refs: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
+    question_fingerprint: Mapped[str] = mapped_column(String(64), nullable=False)
     answer_submitted: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
     session: Mapped["QuizSession"] = relationship(back_populates="questions")

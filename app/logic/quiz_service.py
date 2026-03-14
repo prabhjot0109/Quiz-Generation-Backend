@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+import re
 from typing import cast
 from uuid import UUID
 
@@ -19,7 +21,18 @@ from app.db.models import (
 )
 from app.logic.ai import AIProvider
 from app.logic.retrieval import retrieve_chunks
-from app.logic.scoring import normalize_answer, score_objective_answer, update_session_after_answer
+from app.logic.scoring import (
+    normalize_answer,
+    score_objective_answer,
+    update_session_after_answer,
+)
+
+
+MAX_GENERATION_ATTEMPTS = 3
+
+
+class QuestionGenerationError(RuntimeError):
+    """Raised when the service cannot generate a unique question."""
 
 
 async def create_quiz_session(
@@ -85,37 +98,58 @@ async def get_or_generate_next_question(
     question_type = QuestionType(
         question_type_values[quiz_session.generated_count % len(question_type_values)]
     )
-    chunks = await retrieve_chunks(
-        session,
-        source=quiz_session.source,
-        focus_text=quiz_session.focus_text,
-        limit=2,
-        offset_seed=quiz_session.generated_count,
-    )
-    chunk_text = "\n".join(chunk.content for chunk in chunks)
-    generated = await ai_provider.generate_question(
-        source_title=quiz_session.source.title,
-        chunk_text=chunk_text,
-        question_type=question_type,
-        difficulty=quiz_session.current_difficulty,
-    )
-    question = Question(
-        session_id=quiz_session.id,
-        source_id=quiz_session.source_id,
-        position=quiz_session.generated_count + 1,
-        question_type=generated.question_type,
-        difficulty=quiz_session.current_difficulty,
-        prompt=generated.prompt,
-        options=generated.options,
-        correct_answer=generated.correct_answer,
-        explanation=generated.explanation,
-        chunk_refs=[str(chunk.id) for chunk in chunks],
-    )
-    session.add(question)
-    quiz_session.generated_count += 1
-    await session.commit()
-    await session.refresh(question)
-    return question
+    existing_fingerprints = {
+        question.question_fingerprint
+        for question in quiz_session.questions
+        if question.question_fingerprint
+    }
+    existing_prompts = [question.prompt for question in quiz_session.questions]
+
+    for attempt in range(MAX_GENERATION_ATTEMPTS):
+        chunks = await retrieve_chunks(
+            session,
+            source=quiz_session.source,
+            focus_text=quiz_session.focus_text,
+            limit=2,
+            offset_seed=quiz_session.generated_count + attempt,
+        )
+        chunk_refs = [str(chunk.id) for chunk in chunks]
+        chunk_text = "\n".join(chunk.content for chunk in chunks)
+        generated = await ai_provider.generate_question(
+            source_title=quiz_session.source.title,
+            chunk_text=chunk_text,
+            question_type=question_type,
+            difficulty=quiz_session.current_difficulty,
+            existing_prompts=existing_prompts,
+        )
+        fingerprint = build_question_fingerprint(
+            question_type=generated.question_type,
+            prompt=generated.prompt,
+            chunk_refs=chunk_refs,
+        )
+        if fingerprint in existing_fingerprints:
+            continue
+
+        question = Question(
+            session_id=quiz_session.id,
+            source_id=quiz_session.source_id,
+            position=quiz_session.generated_count + 1,
+            question_type=generated.question_type,
+            difficulty=quiz_session.current_difficulty,
+            prompt=generated.prompt,
+            options=generated.options,
+            correct_answer=generated.correct_answer,
+            explanation=generated.explanation,
+            chunk_refs=chunk_refs,
+            question_fingerprint=fingerprint,
+        )
+        session.add(question)
+        quiz_session.generated_count += 1
+        await session.commit()
+        await session.refresh(question)
+        return question
+
+    raise QuestionGenerationError("Unable to generate a unique question for this session.")
 
 
 async def submit_answer(
@@ -175,3 +209,16 @@ async def submit_answer(
     await session.commit()
     await session.refresh(answer)
     return answer
+
+
+def build_question_fingerprint(
+    *,
+    question_type: QuestionType,
+    prompt: str,
+    chunk_refs: list[str],
+) -> str:
+    normalized_prompt = re.sub(r"\s+", " ", prompt.lower()).strip()
+    fingerprint_source = "|".join(
+        [question_type.value, normalized_prompt, ",".join(sorted(chunk_refs))]
+    )
+    return hashlib.sha256(fingerprint_source.encode("utf-8")).hexdigest()

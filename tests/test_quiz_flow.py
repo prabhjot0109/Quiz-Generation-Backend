@@ -12,7 +12,8 @@ async def _create_ready_source(client: AsyncClient) -> str:
             "title": "Learning Science",
             "text": (
                 "Formative assessment uses regular feedback to guide learning. "
-                "Adaptive quizzes raise difficulty after repeated success and lower it after repeated mistakes. "
+                "Adaptive quizzes raise difficulty after repeated success and lower it "
+                "after repeated mistakes. "
                 "Clear rubrics help evaluate short answers consistently."
             ),
         },
@@ -95,6 +96,8 @@ async def test_two_incorrect_answers_reduce_difficulty(client: AsyncClient) -> N
     )
 
     q2 = (await client.get(f"/v1/quiz-sessions/{session_id}/next-question")).json()["question"]
+    assert q2["prompt"] != q1["prompt"]
+
     answer2 = await client.post(
         f"/v1/quiz-sessions/{session_id}/answers/{q2['id']}",
         json={"answer": {"value": "false"}},

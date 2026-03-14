@@ -16,8 +16,9 @@ from app.contracts.quiz import (
 from app.contracts.source import SourceDetailResponse, SourceResponse
 from app.db.models import SourceInputType
 from app.http.dependencies import get_ai_provider, get_db_session
-from app.logic.ai import AIProvider
+from app.logic.ai import AIProvider, StructuredOutputError
 from app.logic.quiz_service import (
+    QuestionGenerationError,
     create_quiz_session,
     get_or_generate_next_question,
     get_session_or_404,
@@ -97,6 +98,8 @@ async def next_question_endpoint(
         )
     except LookupError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    except (QuestionGenerationError, StructuredOutputError) as exc:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
     return NextQuestionResponse(
         completed=question is None,
         question=QuestionPayload.model_validate(question) if question else None,
@@ -126,6 +129,8 @@ async def submit_answer_endpoint(
         )
     except LookupError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    except StructuredOutputError as exc:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
 
@@ -176,7 +181,10 @@ async def _parse_source_payload(request: Request) -> SourcePayload:
             raw_text=text,
         )
     if isinstance(upload, UploadFile):
-        if not ((upload.filename or "").lower().endswith(".pdf") or upload.content_type == "application/pdf"):
+        if not (
+            (upload.filename or "").lower().endswith(".pdf")
+            or upload.content_type == "application/pdf"
+        ):
             raise HTTPException(status_code=422, detail="Only PDF uploads are supported.")
         file_bytes = await upload.read()
         return SourcePayload(

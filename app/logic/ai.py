@@ -8,7 +8,16 @@ from dataclasses import dataclass
 from typing import Any
 
 import httpx
+from pydantic import BaseModel, ValidationError
 
+from app.contracts.ai import (
+    FillBlankGeneratedQuestionSchema,
+    McqGeneratedQuestionSchema,
+    ShortAnswerEvaluationSchema,
+    ShortAnswerGeneratedQuestionSchema,
+    TrueFalseGeneratedQuestionSchema,
+    json_schema_for_model,
+)
 from app.core.config import Settings
 from app.db.models import DifficultyLevel, Question, QuestionType
 
@@ -31,6 +40,10 @@ class ShortAnswerEvaluation:
     evaluation_mode: str = "ai"
 
 
+class StructuredOutputError(ValueError):
+    """Raised when Gemini returns invalid structured data."""
+
+
 class AIProvider:
     async def generate_question(
         self,
@@ -39,6 +52,7 @@ class AIProvider:
         chunk_text: str,
         question_type: QuestionType,
         difficulty: DifficultyLevel,
+        existing_prompts: Sequence[str] = (),
     ) -> GeneratedQuestion:
         raise NotImplementedError
 
@@ -60,9 +74,10 @@ class MockAIProvider(AIProvider):
         chunk_text: str,
         question_type: QuestionType,
         difficulty: DifficultyLevel,
+        existing_prompts: Sequence[str] = (),
     ) -> GeneratedQuestion:
         sentences = _split_sentences(chunk_text)
-        anchor = sentences[0] if sentences else chunk_text[:200]
+        anchor = _choose_anchor(sentences or [chunk_text[:200]], existing_prompts)
         if question_type == QuestionType.mcq:
             return _mock_mcq(anchor, difficulty)
         if question_type == QuestionType.true_false:
@@ -113,30 +128,27 @@ class GeminiAIProvider(AIProvider):
         chunk_text: str,
         question_type: QuestionType,
         difficulty: DifficultyLevel,
+        existing_prompts: Sequence[str] = (),
     ) -> GeneratedQuestion:
+        schema_model = _schema_model_for_question_type(question_type)
+        duplicate_guidance = _duplicate_guidance(existing_prompts)
         prompt = (
-            "Return only JSON. Build one grounded quiz question from the provided source chunk.\n"
+            "Build one grounded quiz question from the provided source chunk.\n"
             f"Source title: {source_title}\n"
             f"Difficulty: {difficulty.value}\n"
             f"Question type: {question_type.value}\n"
-            "Required JSON keys: prompt, options, correct_answer, explanation.\n"
-            "For mcq use options as [{id, text}] and correct_answer as {id, text}.\n"
-            "For true_false use options as [{id:'true',text:'True'},{id:'false',text:'False'}] "
-            "and correct_answer as {value:true|false}.\n"
-            "For fill_blank use options as null and correct_answer as "
-            "{value:'', acceptable_answers:['']}. Replace the answer in the prompt with ____.\n"
-            "For short_answer use options as null and correct_answer as "
-            "{keywords:[''], reference_answer:''}.\n"
             "Ground every question to the source chunk and keep it self-contained.\n"
+            f"{duplicate_guidance}"
             f"Source chunk:\n{chunk_text}"
         )
-        payload = await self._generate_json(prompt)
+        payload = await self._generate_structured(prompt, schema_model)
+        payload_dict = payload.model_dump()
         return GeneratedQuestion(
             question_type=question_type,
-            prompt=payload["prompt"],
-            options=payload.get("options"),
-            correct_answer=payload["correct_answer"],
-            explanation=payload.get("explanation", ""),
+            prompt=payload_dict["prompt"],
+            options=payload_dict.get("options"),
+            correct_answer=payload_dict["correct_answer"],
+            explanation=payload_dict["explanation"],
         )
 
     async def evaluate_short_answer(
@@ -147,26 +159,52 @@ class GeminiAIProvider(AIProvider):
         source_chunks: Sequence[str],
     ) -> ShortAnswerEvaluation:
         prompt = (
-            "Return only JSON.\n"
             "Evaluate the student's short answer against the grounded quiz question.\n"
             f"Question: {question.prompt}\n"
             f"Expected answer guidance: {json.dumps(question.correct_answer)}\n"
             f"Source context: {' '.join(source_chunks)}\n"
-            f"Student answer: {student_answer}\n"
-            "Required JSON keys: score (0 to 1), is_correct (boolean), feedback, explanation."
+            f"Student answer: {student_answer}"
         )
-        payload = await self._generate_json(prompt)
+        payload = await self._generate_structured(prompt, ShortAnswerEvaluationSchema)
         return ShortAnswerEvaluation(
-            score=float(payload["score"]),
-            is_correct=bool(payload["is_correct"]),
-            feedback=str(payload["feedback"]),
-            explanation=str(payload["explanation"]),
+            score=payload.score, # type: ignore
+            is_correct=payload.is_correct,
+            feedback=payload.feedback,
+            explanation=payload.explanation,
             evaluation_mode="gemini",
         )
 
-    async def _generate_json(self, prompt: str) -> dict[str, Any]:
+    async def _generate_structured(
+        self,
+        prompt: str,
+        schema_model: type[BaseModel],
+    ) -> BaseModel:
+        last_error: Exception | None = None
+        for attempt in range(self.settings.ai_max_retries + 1):
+            try:
+                raw_text = await self._request_json_text(prompt, schema_model)
+                return schema_model.model_validate_json(raw_text)
+            except (StructuredOutputError, ValidationError, json.JSONDecodeError) as exc:
+                last_error = exc
+                if attempt >= self.settings.ai_max_retries:
+                    break
+        raise StructuredOutputError(
+            f"Gemini returned invalid structured output after retries: {last_error}"
+        )
+
+    async def _request_json_text(
+        self,
+        prompt: str,
+        schema_model: type[BaseModel],
+    ) -> str:
         timeout = httpx.Timeout(self.settings.ai_request_timeout_seconds)
-        body = {"contents": [{"parts": [{"text": prompt}]}]}
+        body = {
+            "contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": {
+                "responseMimeType": "application/json",
+                "responseJsonSchema": json_schema_for_model(schema_model),
+            },
+        }
         async with httpx.AsyncClient(timeout=timeout) as client:
             response = await client.post(
                 self.endpoint,
@@ -179,17 +217,33 @@ class GeminiAIProvider(AIProvider):
             part.get("text", "")
             for candidate in data.get("candidates", [])
             for part in candidate.get("content", {}).get("parts", [])
-        )
-        match = re.search(r"\{.*\}", text, re.S)
-        if not match:
-            raise ValueError("Gemini response did not contain JSON.")
-        return json.loads(match.group(0))
+        ).strip()
+        if not text:
+            raise StructuredOutputError("Gemini response did not contain JSON text.")
+        return text
 
 
 def build_ai_provider(settings: Settings) -> AIProvider:
     if settings.gemini_api_key:
         return GeminiAIProvider(settings)
     return MockAIProvider()
+
+
+def _schema_model_for_question_type(question_type: QuestionType) -> type[BaseModel]:
+    if question_type == QuestionType.mcq:
+        return McqGeneratedQuestionSchema
+    if question_type == QuestionType.true_false:
+        return TrueFalseGeneratedQuestionSchema
+    if question_type == QuestionType.fill_blank:
+        return FillBlankGeneratedQuestionSchema
+    return ShortAnswerGeneratedQuestionSchema
+
+
+def _duplicate_guidance(existing_prompts: Sequence[str]) -> str:
+    if not existing_prompts:
+        return ""
+    preview = "\n".join(f"- {prompt}" for prompt in list(existing_prompts)[-3:])
+    return f"Avoid repeating these recent questions or phrasings:\n{preview}\n"
 
 
 def _split_sentences(text: str) -> list[str]:
@@ -200,8 +254,17 @@ def _normalize(value: str) -> str:
     return re.sub(r"\s+", " ", re.sub(r"[^a-z0-9 ]+", " ", value.lower())).strip()
 
 
+def _choose_anchor(sentences: Sequence[str], existing_prompts: Sequence[str]) -> str:
+    normalized_prompts = [_normalize(prompt) for prompt in existing_prompts]
+    for sentence in sentences:
+        sentence_key = _normalize(sentence)
+        if all(sentence_key not in prompt for prompt in normalized_prompts):
+            return sentence
+    return sentences[0]
+
+
 def _mock_mcq(anchor: str, difficulty: DifficultyLevel) -> GeneratedQuestion:
-    prompt = "According to the source, which statement is correct?"
+    prompt = f"Which statement best matches this source idea: {anchor[:90]}?"
     correct_text = anchor.strip()
     distractors = [
         f"The source rejects this idea: {correct_text[:80]}",
@@ -211,7 +274,7 @@ def _mock_mcq(anchor: str, difficulty: DifficultyLevel) -> GeneratedQuestion:
     random.Random(correct_text).shuffle(distractors)
     options = [{"id": "a", "text": correct_text}]
     for index, option in enumerate(distractors[:3], start=1):
-        options.append({"id": chr(ord('a') + index), "text": option})
+        options.append({"id": chr(ord("a") + index), "text": option})
     random.Random(f"{correct_text}-{difficulty.value}").shuffle(options)
     correct_option = next(option for option in options if option["text"] == correct_text)
     return GeneratedQuestion(
@@ -247,14 +310,19 @@ def _mock_fill_blank(anchor: str) -> GeneratedQuestion:
     )
 
 
-def _mock_short_answer(anchor: str, source_title: str, difficulty: DifficultyLevel) -> GeneratedQuestion:
+def _mock_short_answer(
+    anchor: str,
+    source_title: str,
+    difficulty: DifficultyLevel,
+) -> GeneratedQuestion:
     keywords = [word for word in re.findall(r"[A-Za-z]{5,}", anchor)[:4]]
     if not keywords:
         keywords = [source_title.split()[0] if source_title else "topic"]
+    focus_phrase = " ".join(anchor.split()[:8])
     prompt = (
-        f"In 2-3 sentences, explain the main idea from this part of {source_title}."
+        f"In 2-3 sentences, explain this idea from {source_title}: {focus_phrase}"
         if difficulty != DifficultyLevel.easy
-        else f"Briefly explain the main point described here from {source_title}."
+        else f"Briefly explain this point from {source_title}: {focus_phrase}"
     )
     return GeneratedQuestion(
         question_type=QuestionType.short_answer,
